@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IELTS 英文單字翻牌練習，透過翻牌、例句與熟悉度標記進行複習。">
+  <title>Flip & Learn｜IELTS 單字翻牌</title>
+  <style>
+    :root {
+      --ink: #263238;
+      --muted: #66757f;
+      --paper: #fffdf8;
+      --cream: #f4efe4;
+      --teal: #137b76;
+      --teal-dark: #0c5d59;
+      --coral: #ef765f;
+      --gold: #e9b949;
+      --shadow: 0 18px 50px rgba(52, 70, 75, .15);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(239,118,95,.15), transparent 24rem),
+        radial-gradient(circle at 90% 90%, rgba(19,123,118,.14), transparent 26rem),
+        var(--cream);
+    }
+
+    button { font: inherit; }
+
+    .app {
+      width: min(960px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      color: white;
+      font-size: 23px;
+      border-radius: 15px;
+      background: var(--teal);
+      box-shadow: 0 8px 20px rgba(19,123,118,.25);
+    }
+    h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.2rem, 3vw, 1.65rem); }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: .82rem; }
+
+    .ghost-btn {
+      border: 1px solid rgba(38,50,56,.14);
+      border-radius: 999px;
+      padding: 10px 15px;
+      color: var(--ink);
+      background: rgba(255,255,255,.65);
+      cursor: pointer;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .study-panel, .side-panel {
+      border: 1px solid rgba(38,50,56,.08);
+      border-radius: 28px;
+      background: rgba(255,253,248,.82);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .study-panel { padding: clamp(20px, 4vw, 36px); }
+    .side-panel { padding: 23px; }
+
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .eyebrow { color: var(--teal); font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .counter { color: var(--muted); font-size: .9rem; font-weight: 700; }
+
+    .progress-track {
+      height: 8px;
+      margin: 14px 0 24px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e4e2dc;
+    }
+    .progress-bar { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--teal), #54aaa5); transition: width .3s ease; }
+
+    .card-scene { height: 360px; perspective: 1100px; }
+    .word-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform .58s cubic-bezier(.2,.75,.25,1);
+      background: transparent;
+    }
+    .word-card.flipped { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 38px;
+      border-radius: 24px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    }
+    .card-front { color: white; background: linear-gradient(145deg, var(--teal-dark), var(--teal)); }
+    .card-back { color: var(--ink); background: linear-gradient(145deg, #fff8e9, #fffdf8); transform: rotateY(180deg); border: 1px solid rgba(38,50,56,.09); }
+    .word { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.35rem, 8vw, 4.3rem); line-height: 1; }
+    .phonetic { margin: 14px 0 0; color: rgba(255,255,255,.72); font-size: 1rem; }
+    .hint { position: absolute; bottom: 25px; color: rgba(255,255,255,.68); font-size: .84rem; }
+    .meaning { margin: 0 0 12px; color: var(--coral); font-size: 1.65rem; font-weight: 800; }
+    .pos { margin: 0 0 24px; padding: 5px 11px; color: var(--teal-dark); font-size: .8rem; font-weight: 800; border-radius: 999px; background: rgba(19,123,118,.1); }
+    .example { max-width: 470px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.08rem; line-height: 1.65; }
+    .translation { max-width: 470px; margin: 10px 0 0; color: var(--muted); font-size: .88rem; line-height: 1.55; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr 1fr; gap: 10px; margin-top: 22px; }
+    .action-btn {
+      min-height: 48px;
+      border: 0;
+      border-radius: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .action-btn:hover { filter: brightness(.97); transform: translateY(-1px); }
+    .action-btn:active { transform: translateY(1px); }
+    .nav-btn { color: var(--ink); background: #e9e7e0; }
+    .unsure-btn { color: #934230; background: #ffe0d7; }
+    .know-btn { color: #075f5b; background: #ccebe7; }
+
+    .side-panel h2 { margin: 0 0 6px; font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; }
+    .side-panel > p { margin: 0 0 22px; color: var(--muted); font-size: .86rem; line-height: 1.5; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { padding: 16px 12px; border-radius: 18px; background: #f1eee7; }
+    .stat strong { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; }
+    .stat span { color: var(--muted); font-size: .78rem; }
+    .stat.known strong { color: var(--teal); }
+    .stat.unsure strong { color: var(--coral); }
+
+    .mini-title { margin: 24px 0 10px; font-size: .78rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .dot-row { display: flex; flex-wrap: wrap; gap: 7px; }
+    .dot { width: 13px; height: 13px; border: 0; border-radius: 50%; background: #d8d6d0; }
+    .dot.current { outline: 2px solid var(--gold); outline-offset: 3px; }
+    .dot.known { background: var(--teal); }
+    .dot.unsure { background: var(--coral); }
+    .tip { margin-top: 23px; padding: 15px; border-left: 4px solid var(--gold); border-radius: 4px 14px 14px 4px; color: #6b5524; background: #fff4d4; font-size: .82rem; line-height: 1.55; }
+
+    .result {
+      display: none;
+      min-height: 470px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 30px;
+    }
+    .result.show { display: flex; }
+    .result-icon { font-size: 3.2rem; }
+    .result h2 { margin: 12px 0 6px; font-family: Georgia, "Times New Roman", serif; font-size: 2rem; }
+    .result p { color: var(--muted); }
+    .result-score { margin: 18px 0; color: var(--teal); font-family: Georgia, "Times New Roman", serif; font-size: 3.4rem; font-weight: 800; }
+    .restart-btn { border: 0; border-radius: 15px; padding: 13px 22px; color: white; font-weight: 800; background: var(--teal); cursor: pointer; }
+
+    footer { margin-top: 22px; color: var(--muted); text-align: center; font-size: .75rem; }
+
+    @media (max-width: 760px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .side-panel { order: -1; }
+      .side-panel > p, .tip { display: none; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .mini-title { margin-top: 18px; }
+      .card-scene { height: 390px; }
+    }
+
+    @media (max-width: 520px) {
+      .app { width: min(100% - 20px, 960px); padding-top: 16px; }
+      .brand p { display: none; }
+      .ghost-btn { padding: 9px 12px; font-size: .82rem; }
+      .study-panel { padding: 15px; border-radius: 22px; }
+      .card-face { padding: 25px; }
+      .actions { grid-template-columns: 1fr 1fr; }
+      .nav-btn:first-child { order: 3; }
+      .nav-btn:last-child { order: 4; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">↻</div>
+        <div>
+          <h1>Flip & Learn</h1>
+          <p>IELTS Academic Vocabulary</p>
+        </div>
+      </div>
+      <button class="ghost-btn" id="shuffleBtn" type="button">🔀 重新洗牌</button>
+    </header>
+
+    <div class="dashboard">
+      <section class="study-panel" aria-label="單字練習區">
+        <div id="studyView">
+          <div class="topline">
+            <span class="eyebrow">Today's deck</span>
+            <span class="counter" id="counter">1 / 12</span>
+          </div>
+          <div class="progress-track" aria-label="學習進度">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+
+          <div class="card-scene">
+            <button class="word-card" id="wordCard" type="button" aria-label="點擊翻面查看答案" aria-pressed="false">
+              <div class="card-face card-front">
+                <p class="word" id="word">inevitable</p>
+                <p class="phonetic" id="phonetic">/ɪnˈevɪtəbəl/</p>
+                <span class="hint">點擊卡片查看中文與例句</span>
+              </div>
+              <div class="card-face card-back">
+                <p class="meaning" id="meaning">不可避免的</p>
+                <p class="pos" id="partOfSpeech">adjective</p>
+                <p class="example" id="example">Change is inevitable in a rapidly developing society.</p>
+                <p class="translation" id="translation">在快速發展的社會中，改變是不可避免的。</p>
+              </div>
+            </button>
+          </div>
+
+          <div class="actions">
+            <button class="action-btn nav-btn" id="prevBtn" type="button">← 上一題</button>
+            <button class="action-btn unsure-btn" id="unsureBtn" type="button">還不熟</button>
+            <button class="action-btn know-btn" id="knowBtn" type="button">我認識</button>
+            <button class="action-btn nav-btn" id="nextBtn" type="button">下一題 →</button>
+          </div>
+        </div>
+
+        <div class="result" id="resultView" aria-live="polite">
+          <div class="result-icon">🎉</div>
+          <h2>本輪練習完成！</h2>
+          <p>你已經看完今天的 IELTS 單字。</p>
+          <div class="result-score" id="resultScore">0 / 12</div>
+          <p id="resultMessage">再複習一次不熟的單字，記憶會更穩固。</p>
+          <button class="restart-btn" id="restartBtn" type="button">重新練習</button>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2>學習紀錄</h2>
+        <p>看完答案後，標記你對這個單字的熟悉程度。</p>
+        <div class="stats">
+          <div class="stat known"><strong id="knownCount">0</strong><span>認識</span></div>
+          <div class="stat unsure"><strong id="unsureCount">0</strong><span>還不熟</span></div>
+        </div>
+        <p class="mini-title">本輪進度</p>
+        <div class="dot-row" id="dotRow" aria-label="各題學習狀態"></div>
+        <div class="tip">小技巧：先猜意思，再翻牌確認。例句能幫助你記住單字的實際用法。</div>
+      </aside>
+    </div>
+
+    <footer>Made for focused IELTS practice · 資料僅供英文學習使用</footer>
+  </main>
+
+  <script>
+    const originalWords = [
+      { word: "inevitable", phonetic: "/ɪnˈevɪtəbəl/", meaning: "不可避免的", pos: "adjective", example: "Change is inevitable in a rapidly developing society.", translation: "在快速發展的社會中，改變是不可避免的。" },
+      { word: "substantial", phonetic: "/səbˈstænʃəl/", meaning: "大量的；重大的", pos: "adjective", example: "The policy led to a substantial reduction in waste.", translation: "這項政策使廢棄物大幅減少。" },
+      { word: "allocate", phonetic: "/ˈæləkeɪt/", meaning: "分配", pos: "verb", example: "The government should allocate more funds to education.", translation: "政府應分配更多資金給教育。" },
+      { word: "deteriorate", phonetic: "/dɪˈtɪəriəreɪt/", meaning: "惡化", pos: "verb", example: "Air quality may deteriorate as traffic increases.", translation: "隨著交通量增加，空氣品質可能惡化。" },
+      { word: "controversial", phonetic: "/ˌkɒntrəˈvɜːʃəl/", meaning: "具爭議性的", pos: "adjective", example: "The proposal remains controversial among local residents.", translation: "這項提案在當地居民之間仍具有爭議。" },
+      { word: "implement", phonetic: "/ˈɪmplɪment/", meaning: "實施；執行", pos: "verb", example: "Schools implemented new measures to support students.", translation: "學校實施了新措施來支持學生。" },
+      { word: "perspective", phonetic: "/pəˈspektɪv/", meaning: "觀點；角度", pos: "noun", example: "Travel can help people see issues from a different perspective.", translation: "旅行能幫助人們從不同角度看待問題。" },
+      { word: "sustainable", phonetic: "/səˈsteɪnəbəl/", meaning: "永續的；可持續的", pos: "adjective", example: "Cities need sustainable solutions for public transport.", translation: "城市需要具永續性的公共運輸方案。" },
+      { word: "consecutive", phonetic: "/kənˈsekjətɪv/", meaning: "連續的", pos: "adjective", example: "Sales increased for three consecutive months.", translation: "銷售額連續三個月成長。" },
+      { word: "undermine", phonetic: "/ˌʌndəˈmaɪn/", meaning: "逐漸削弱", pos: "verb", example: "A lack of trust can undermine teamwork.", translation: "缺乏信任可能逐漸削弱團隊合作。" },
+      { word: "compelling", phonetic: "/kəmˈpelɪŋ/", meaning: "令人信服的；引人注目的", pos: "adjective", example: "The report provides compelling evidence for reform.", translation: "這份報告為改革提供了有力的證據。" },
+      { word: "fluctuate", phonetic: "/ˈflʌktʃueɪt/", meaning: "波動；起伏", pos: "verb", example: "Housing prices tend to fluctuate over time.", translation: "房價往往會隨時間波動。" }
+    ];
+
+    let words = [...originalWords];
+    let current = 0;
+    let status = new Array(words.length).fill(null);
+
+    const $ = (id) => document.getElementById(id);
+    const wordCard = $("wordCard");
+
+    function renderCard() {
+      const item = words[current];
+      wordCard.classList.remove("flipped");
+      wordCard.setAttribute("aria-pressed", "false");
+      $("word").textContent = item.word;
+      $("phonetic").textContent = item.phonetic;
+      $("meaning").textContent = item.meaning;
+      $("partOfSpeech").textContent = item.pos;
+      $("example").textContent = item.example;
+      $("translation").textContent = item.translation;
+      $("counter").textContent = `${current + 1} / ${words.length}`;
+      $("progressBar").style.width = `${((current + 1) / words.length) * 100}%`;
+      renderStats();
+    }
+
+    function renderStats() {
+      $("knownCount").textContent = status.filter(v => v === "known").length;
+      $("unsureCount").textContent = status.filter(v => v === "unsure").length;
+      $("dotRow").innerHTML = status.map((value, index) =>
+        `<span class="dot ${value || ""} ${index === current ? "current" : ""}" title="第 ${index + 1} 題"></span>`
+      ).join("");
+    }
+
+    function goTo(index) {
+      current = (index + words.length) % words.length;
+      renderCard();
+    }
+
+    function mark(value) {
+      status[current] = value;
+      renderStats();
+      if (status.every(Boolean)) {
+        showResult();
+      } else {
+        let next = current + 1;
+        while (next < words.length && status[next]) next++;
+        goTo(next < words.length ? next : status.findIndex(v => !v));
+      }
+    }
+
+    function showResult() {
+      const known = status.filter(v => v === "known").length;
+      $("studyView").style.display = "none";
+      $("resultView").classList.add("show");
+      $("resultScore").textContent = `${known} / ${words.length}`;
+      $("resultMessage").textContent = known === words.length
+        ? "全部認識，太厲害了！可以重新洗牌加深記憶。"
+        : `還有 ${words.length - known} 個單字需要複習，再練一次就會更熟。`;
+    }
+
+    function shuffle() {
+      words = [...originalWords].sort(() => Math.random() - 0.5);
+      current = 0;
+      status = new Array(words.length).fill(null);
+      $("studyView").style.display = "block";
+      $("resultView").classList.remove("show");
+      renderCard();
+    }
+
+    wordCard.addEventListener("click", () => {
+      wordCard.classList.toggle("flipped");
+      wordCard.setAttribute("aria-pressed", String(wordCard.classList.contains("flipped")));
+    });
+    $("prevBtn").addEventListener("click", () => goTo(current - 1));
+    $("nextBtn").addEventListener("click", () => goTo(current + 1));
+    $("knowBtn").addEventListener("click", () => mark("known"));
+    $("unsureBtn").addEventListener("click", () => mark("unsure"));
+    $("shuffleBtn").addEventListener("click", shuffle);
+    $("restartBtn").addEventListener("click", shuffle);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space") { event.preventDefault(); wordCard.click(); }
+      if (event.key === "ArrowLeft") goTo(current - 1);
+      if (event.key === "ArrowRight") goTo(current + 1);
+    });
+
+    renderCard();
+  </script>
+</body>
+</html>
